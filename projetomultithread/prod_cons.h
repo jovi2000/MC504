@@ -22,7 +22,7 @@ typedef struct Cliente {
 
     struct Cliente *next;  //aponta pro próximo da fila
 
-    long senha; // ID do cliente
+    long *senha; // ID do cliente
     enum Food food; //tipo de comida que o Cliente pode pedir(ele já sabe com antecedência)
 } Cliente;
 
