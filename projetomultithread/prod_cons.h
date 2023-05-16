@@ -1,19 +1,6 @@
 #ifndef PROD_CONS_H
 #define PROD_CONS_H
 
-/***
- * Opções disponíveis no cardápio
- * Cada comida pode ter um tempo diferente de preparação e consumo, assim o restaurante fica bem "paralelizado"
- * */
-
-enum Food {
-    Frango,
-    Carbonara,
-    Porpeta,
-    Mignon,
-    Camarao
-};
-
 /**
  * Estrutura da lista que será a fila
  * Cliente é uma senha enquanto está na fila, e ao entra no restaurante, ele vira uma Thread cujo ID é 'senha'.
@@ -23,7 +10,7 @@ typedef struct Cliente {
     struct Cliente *next;  //aponta pro próximo da fila
 
     long *senha; // ID do cliente
-    enum Food food; //tipo de comida que o Cliente pode pedir(ele já sabe com antecedência)
+    char *food; //tipo de comida que o Cliente pode pedir(ele já sabe com antecedência)
 } Cliente;
 
 typedef struct Cliente *p_no;

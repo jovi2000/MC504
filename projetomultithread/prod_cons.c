@@ -23,6 +23,13 @@ pthread_mutex_t mutexFila;
 char* buffer[NUM_MESAS]; // buffer de comida com o mesmo tamanho do numero de mesas, já q n faz sentido ser maior. Talvez fazer o buffer ter o tamanho de NUM_CHEFFS
 int count = 0; // numero atual de comidas no buffer
 
+/***
+ * Opções disponíveis no cardápio
+ * Cada comida pode ter um tempo diferente de preparação e consumo, assim o restaurante fica bem "paralelizado"
+ * */
+
+char *food[5] = {"Frango", "Carbonara", "Porpeta", "Mignon", "Camarão"};
+
 /**
  * Chef que produz uma comida
  * */ 
@@ -31,14 +38,14 @@ void* chef(void* args) {
         // Espera o cliente fazer o pedido
         sem_wait(&semPedidosFeitos);
     
-        // Produce
-        char* x = "Food";
-        sleep(1); // random TODO()
+        // Cozinhando
+        char* comida = food[rand()%5];
+        sleep((rand()%4)+2);
 
-        // Adicona no buffer
+        // Adicona comida no buffer
         pthread_mutex_lock(&mutexBuffer);
-        printf("Cozinheiro coloca comida no buffer\n");
-        buffer[count] = x;
+        printf("Cozinheiro coloca %s no buffer\n", comida);
+        buffer[count] = comida;
         count++;
         pthread_mutex_unlock(&mutexBuffer);
         sem_post(&semPedidosProntos);
@@ -68,16 +75,16 @@ void* mesa(void* args) {
       sem_post(&semPedidosFeitos);
       sem_wait(&semPedidosProntos);
       pthread_mutex_lock(&mutexBuffer);
-      printf("Cliente %ld entra no buffer pra pegar comida\n", *clienteAtual.senha);
+      printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
       comida = buffer[count - 1];
       count--;
       pthread_mutex_unlock(&mutexBuffer);
 
       // Consome a comida
-      printf("Cliente %ld da mesa %ld comeu %s\n", *clienteAtual.senha, idMesa ,comida);
-      sleep(1); //random
+      sleep((rand()%8)+1);
+      printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
 
-      // Sai da mesa TODO
+      // Sai da mesa
     }
 }
 
@@ -85,7 +92,7 @@ void* colocar_clientes_fila(void* args) {
     long i = 0;
     while (1) {
       Fila *fila = (Fila *) args;
-      sleep(1); // random TODO()
+      sleep((rand()%3)+2);
 
       //Cria cliente
       p_no novoCliente;
@@ -106,7 +113,7 @@ void* colocar_clientes_fila(void* args) {
         pthread_mutex_lock(&mutexFila);
         fila->last->next = novoCliente;
         fila->last = fila->last->next;
-        printf("Cliente %ld colocado na fila\n", *fila->start->senha);
+        printf("Cliente %ld colocado na fila\n", *fila->last->senha);
         pthread_mutex_unlock(&mutexFila);
       }
       sem_post(&semFila);
