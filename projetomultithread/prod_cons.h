@@ -35,7 +35,7 @@ typedef struct Fila {
 
 typedef struct ArgsMesa {
     long id;
-    p_no start;
+    Fila *fila;
 } ArgsMesa;
 
 // p_no *start; // ponteiro pro início da fila

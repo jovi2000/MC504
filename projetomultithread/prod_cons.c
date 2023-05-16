@@ -49,29 +49,26 @@ void* chef(void* args) {
  * Talvez fazer esse ID ser uma "senha" que se obtem na fila, como se fosse uma senha pra obter a comida especifica.
  * */
 void* mesa(void* args) {
+    ArgsMesa *argsMesa = (ArgsMesa *) args;
     while (1) {
-      ArgsMesa *argsMesa = (ArgsMesa *) args;
       char* comida;
       long idMesa = argsMesa->id;
 
+      // Cliente pega seu lugar na mesa  
       sem_wait(&semFila);
       pthread_mutex_lock(&mutexFila);
-      printf("argsMesa: %p\n", argsMesa->start);
-      printf("argsMesa: %p\n", argsMesa->start->senha);
-      Cliente clienteAtual = *argsMesa->start;
-      p_no aux = argsMesa->start;
-      printf("aux: %p\n", aux);
-      printf("%ld\n", *clienteAtual.senha);
-      argsMesa->start = argsMesa->start->next;
-      printf("next: %p\n", argsMesa->start->next);
+      Cliente clienteAtual = *argsMesa->fila->start;
+      //p_no aux = argsMesa->fila->start;
+      argsMesa->fila->start = argsMesa->fila->start->next;
+      //free(aux); // Ta certo isso?? TODO()
+      printf("Cliente %ld senta na mesa\n", *clienteAtual.senha);
       pthread_mutex_unlock(&mutexFila);
 
       // Remove uma comida do buffer
       sem_post(&semPedidosFeitos);
       sem_wait(&semPedidosProntos);
-      printf("Cliente tenta entrar no buffer pra pegar comida\n");
       pthread_mutex_lock(&mutexBuffer);
-      printf("Cliente entra no buffer pra pegar comida\n");
+      printf("Cliente %ld entra no buffer pra pegar comida\n", *clienteAtual.senha);
       comida = buffer[count - 1];
       count--;
       pthread_mutex_unlock(&mutexBuffer);
@@ -89,13 +86,12 @@ void* colocar_clientes_fila(void* args) {
     while (1) {
       Fila *fila = (Fila *) args;
       sleep(1); // random TODO()
-      printf("dnv %p\n", fila->start);
 
       //Cria cliente
       p_no novoCliente;
-      novoCliente = malloc(sizeof(Cliente));
-      novoCliente->senha = malloc(sizeof(long));
-      novoCliente->senha = &i;
+      novoCliente = malloc(sizeof(Cliente)); // Precisa dar free nisso TODO()
+      novoCliente->senha = malloc(sizeof(long)); // Precisa dar free nisso TODO()
+      *novoCliente->senha = i;
       novoCliente->next = NULL;
 
       //Coloca cliente na fila
@@ -103,16 +99,17 @@ void* colocar_clientes_fila(void* args) {
         pthread_mutex_lock(&mutexFila);
         fila->start = novoCliente;
         fila->last = novoCliente;
+        printf("Cliente %ld colocado na fila\n", *fila->start->senha);
         pthread_mutex_unlock(&mutexFila);
       }
       else {
         pthread_mutex_lock(&mutexFila);
-        fila->last->next = novoCliente; // SEGFAULT AQUI!!
+        fila->last->next = novoCliente;
         fila->last = fila->last->next;
+        printf("Cliente %ld colocado na fila\n", *fila->start->senha);
         pthread_mutex_unlock(&mutexFila);
       }
       sem_post(&semFila);
-      printf("Cliente %ld colocado na fila\n", *novoCliente->senha);
       i++;
     }
 }
@@ -132,14 +129,12 @@ int main(int argc, char* argv[]) {
     Fila *fila;
     fila = malloc(sizeof(Fila));
     fila->start = NULL;
-    printf("endereço start fila: %p\n", &fila->start);
     fila->last = NULL;
 
     // Argumentos da mesa:
     ArgsMesa vectorArgsMesa[NUM_MESAS];
     for (long j = 0; j < NUM_MESAS; j++) {
-      vectorArgsMesa[j].start = &fila->start;
-      printf("endereço start fila2: %p\n", vectorArgsMesa[j].start);
+      vectorArgsMesa[j].fila = fila;
       vectorArgsMesa[j].id = j;
     }
 
