@@ -72,7 +72,7 @@ void* mesa(void* args) {
       //   printf("%ld,", argsMesa->estado[i]);
       // }
       // printf("\n");
-      // printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
+      printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
       pthread_mutex_unlock(&mutexFila);
 
       // Remove uma comida do buffer
