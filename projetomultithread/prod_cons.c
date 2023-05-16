@@ -65,10 +65,14 @@ void* mesa(void* args) {
       sem_wait(&semFila);
       pthread_mutex_lock(&mutexFila);
       Cliente clienteAtual = *argsMesa->fila->start;
-      //p_no aux = argsMesa->fila->start;
+      p_no aux = argsMesa->fila->start;
       argsMesa->fila->start = argsMesa->fila->start->next;
-      //free(aux); // Ta certo isso?? TODO()
-      printf("Cliente %ld senta na mesa\n", *clienteAtual.senha);
+      argsMesa->estado[idMesa] = *clienteAtual.senha;
+      // for(int i = 0; i < 4; i++) {
+      //   printf("%ld,", argsMesa->estado[i]);
+      // }
+      // printf("\n");
+      // printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
       pthread_mutex_unlock(&mutexFila);
 
       // Remove uma comida do buffer
@@ -83,8 +87,11 @@ void* mesa(void* args) {
       // Consome a comida
       sleep((rand()%8)+1);
       printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
-
+  
       // Sai da mesa
+      argsMesa->estado[idMesa] = -1;
+      free(aux->senha);
+      free(aux);
     }
 }
 
@@ -138,11 +145,15 @@ int main(int argc, char* argv[]) {
     fila->start = NULL;
     fila->last = NULL;
 
+    // Vetor estado das mesas:
+    long estadoMesas[4] = {-1, -1, -1, -1};
+
     // Argumentos da mesa:
     ArgsMesa vectorArgsMesa[NUM_MESAS];
     for (long j = 0; j < NUM_MESAS; j++) {
       vectorArgsMesa[j].fila = fila;
       vectorArgsMesa[j].id = j;
+      vectorArgsMesa[j].estado = estadoMesas;
     }
 
     if (pthread_create(&th[0], NULL, colocar_clientes_fila, fila) != 0) {
