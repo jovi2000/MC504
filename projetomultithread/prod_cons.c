@@ -11,8 +11,6 @@
 #define NUM_MESAS 4
 #define NUM_CHEFFS 1 
 
-// int mesas_ocupadas = 0; //talvez fazer isso ser um semáforo?
-
 sem_t semPedidosFeitos;
 sem_t semPedidosProntos;
 sem_t semFila;
@@ -29,6 +27,11 @@ int count = 0; // numero atual de comidas no buffer
  * */
 
 char *food[5] = {"Frango", "Carbonara", "Porpeta", "Mignon", "Camarão"};
+
+void print_estado_restaurante(Fila *fila, long *estadoMesas) {
+  // TODO()
+  printf("\n");
+}
 
 /**
  * Chef que produz uma comida
@@ -67,9 +70,9 @@ void* mesa(void* args) {
       Cliente clienteAtual = *argsMesa->fila->start;
       p_no aux = argsMesa->fila->start;
       argsMesa->fila->start = argsMesa->fila->start->next;
-      argsMesa->estado[idMesa] = *clienteAtual.senha;
-      // for(int i = 0; i < 4; i++) {
-      //   printf("%ld,", argsMesa->estado[i]);
+      argsMesa->estado[idMesa].idCliente = *clienteAtual.senha;
+      //  for(int i = 0; i < 4; i++) {
+      //    printf("idCliente: %ld, comida: %s,", argsMesa->estado[i].idCliente, argsMesa->estado[i].comida);
       // }
       // printf("\n");
       printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
@@ -79,8 +82,10 @@ void* mesa(void* args) {
       sem_post(&semPedidosFeitos);
       sem_wait(&semPedidosProntos);
       pthread_mutex_lock(&mutexBuffer);
+      printf("buffer %ld\n", *clienteAtual.senha);
       printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
       comida = buffer[count - 1];
+      argsMesa->estado[idMesa].comida = buffer[count - 1];
       count--;
       pthread_mutex_unlock(&mutexBuffer);
 
@@ -89,7 +94,8 @@ void* mesa(void* args) {
       printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
   
       // Sai da mesa
-      argsMesa->estado[idMesa] = -1;
+      argsMesa->estado[idMesa].idCliente = -1;
+      argsMesa->estado[idMesa].comida = NULL;
       free(aux->senha);
       free(aux);
     }
@@ -103,8 +109,8 @@ void* colocar_clientes_fila(void* args) {
 
       //Cria cliente
       p_no novoCliente;
-      novoCliente = malloc(sizeof(Cliente)); // Precisa dar free nisso TODO()
-      novoCliente->senha = malloc(sizeof(long)); // Precisa dar free nisso TODO()
+      novoCliente = malloc(sizeof(Cliente));
+      novoCliente->senha = malloc(sizeof(long));
       *novoCliente->senha = i;
       novoCliente->next = NULL;
 
@@ -146,20 +152,24 @@ int main(int argc, char* argv[]) {
     fila->last = NULL;
 
     // Vetor estado das mesas:
-    long estadoMesas[4] = {-1, -1, -1, -1};
+    EstadoMesas estadoMesas[4];
 
     // Argumentos da mesa:
     ArgsMesa vectorArgsMesa[NUM_MESAS];
     for (long j = 0; j < NUM_MESAS; j++) {
       vectorArgsMesa[j].fila = fila;
       vectorArgsMesa[j].id = j;
+      estadoMesas[j].idCliente = -1;
+      estadoMesas[j].comida = NULL;
       vectorArgsMesa[j].estado = estadoMesas;
     }
 
+    // Cria 1 Thread que coloca os clientes que chegam na fila
     if (pthread_create(&th[0], NULL, colocar_clientes_fila, fila) != 0) {
       perror("Failed to create thread");
     }
 
+    // Cria 1 Thread para o Chef e 4 Threads para as Mesas
     for (i = 1; i < NUM_THREADS; i++) {
         if (i < 2) {
             if (pthread_create(&th[i], NULL, chef, (void *)i) != 0) {
@@ -171,11 +181,15 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
+    // Faz o join das Threads
     for (i = 0; i < NUM_THREADS; i++) {
         if (pthread_join(th[i], NULL) != 0) {
             perror("Failed to join thread");
         }
     }
+
+    // Apaga as Threads e a Fila
     sem_destroy(&semPedidosFeitos);
     sem_destroy(&semPedidosProntos);
     sem_destroy(&semFila);

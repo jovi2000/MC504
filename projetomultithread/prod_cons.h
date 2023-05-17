@@ -10,7 +10,6 @@ typedef struct Cliente {
     struct Cliente *next;  //aponta pro próximo da fila
 
     long *senha; // ID do cliente
-    char *food; //tipo de comida que o Cliente pode pedir(ele já sabe com antecedência)
 } Cliente;
 
 typedef struct Cliente *p_no;
@@ -20,11 +19,17 @@ typedef struct Fila {
     p_no last;
 } Fila;
 
+typedef struct EstadoMesas {
+    long idCliente;
+    char *comida;
+} EstadoMesas;
+
 typedef struct ArgsMesa {
     long id;
     Fila *fila;
-    long *estado;
+    EstadoMesas *estado;
 } ArgsMesa;
+
 
 // p_no *start; // ponteiro pro início da fila
 // p_no *last; // ponteiro pro final da fila
