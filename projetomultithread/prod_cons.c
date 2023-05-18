@@ -30,68 +30,103 @@ char *food[5] = {"Frango", "Carbonara", "Porpeta", "Mignon", "Camarão"};
 
 
 void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
-  printf("                    |------------------------------------------------------|\n");
-  printf("                    |                                                      |\n");
-  printf("                    |       |------------------|       |---|               |\n");
+  int largura=9;  
+  printf("                    |---------------------------------------------------------|\n");
+  printf("                    |                                                         |\n");
+  printf("                    |   |---------------------------------------| |----|      |\n");
   if (count == 0) {
-      printf("                    |       | | | | |       |Ch1|               |\n");
-  } else if (count == 1) {
-      printf("                    |       |%s| | | |       |Ch1|               |\n", buffer[0]);
-  } else if (count == 2) {
-      printf("                    |       |%s|%s | | |       |Ch1|               |\n", buffer[0], buffer[1]);
-  } else if (count == 3) {
-      printf("                    |       |%s|%s |%s | |       |Ch1|               |\n", buffer[0], buffer[1], buffer[2]);
-  } else if (count == 4) {
-      printf("                    |       |%s|%s |%s |%s|       |Ch1|               |\n", buffer[0], buffer[1], buffer[2], buffer[3]);
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s| |Chef|      |\n",
+  largura,"",largura,"",largura,"",largura,"");
+  } 
+  else if (count == 1) {
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s|  |Chef|      |\n",
+  largura,buffer[0],largura,"",largura,"",largura,"");
+  } 
+  else if (count == 2) {
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s| |Chef|      |\n",
+  largura,buffer[0],largura,buffer[1],largura,"",largura,"");
+  } 
+  else if (count == 3) {
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s| |Chef|      |\n",
+  largura,buffer[0],largura,buffer[1],largura,buffer[2],largura,"");
+  } 
+  else if (count == 4) {
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s| |Chef|      |\n",
+  largura,buffer[0],largura,buffer[1],largura,buffer[2],largura,buffer[3]);
   }
-  printf("                    |       |------------------|       |---|               |\n");
-  printf("                    |                                                      |\n");
-  printf("                    |                                                      |\n");
+  printf("                    |   |---------------------------------------| |----|      |\n");
+  printf("                    |                                                         |\n");
+  printf("                    |                                                         |\n");
   if (estadoMesa[0].comida == NULL && estadoMesa[1].comida == NULL) {
-      printf("\n");
+  printf("                    |                                                         |\n");
   } 
   else if (estadoMesa[0].comida != NULL && estadoMesa[1].comida == NULL) {
-      printf("                    |          %s                                        |\n", estadoMesa[0].comida);
+  printf("                    |         %-*s                                       |\n", largura,estadoMesa[0].comida);
   } 
+  else if (estadoMesa[0].comida == NULL && estadoMesa[1].comida != NULL) {
+  printf("                    |         %-*s                                       |\n", largura,estadoMesa[1].comida);
+  }
   else if (estadoMesa[0].comida != NULL && estadoMesa[1].comida != NULL) {
-      printf("                    |          %s                            %s            |\n", estadoMesa[0].comida, estadoMesa[1].comida);
+  printf("                    |         %-*s                        %-*s      |\n", largura,estadoMesa[0].comida, largura,estadoMesa[1].comida);
   }
   if (estadoMesa[0].idCliente == -1 && estadoMesa[1].idCliente == -1) {
-      printf("                    |      |\\`===='/|                    |\\`===='/|            |\n");
+  printf("                    |      |\\`====='/|                      |\\`====='/|       |\n");
   } 
   else if (estadoMesa[0].idCliente != -1 && estadoMesa[1].idCliente == -1) {
-      printf("                    |      Cl%ld|\\`===='/|                    |\\`===='/|            |\n", estadoMesa[0].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|                      |\\`====='/|       |\n", estadoMesa[0].idCliente);
   } 
   else if (estadoMesa[0].idCliente != -1 && estadoMesa[1].idCliente != -1) {
-      printf("                    |      Cl%ld|\\`===='/|                    Cl%ld|\\`===='/|            |\n", estadoMesa[0].idCliente,estadoMesa[1].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|                 Cl%3ld|\\`====='/|       |\n", estadoMesa[0].idCliente,estadoMesa[1].idCliente);
   }
-  printf("                    |      |  Mesa1  |                   |  Mesa2 |        |\n");
-  printf("                    |                                                      |\n");
-  printf("--------------------                                                       |\n");
-  printf("    Cl3 Cl3 Cl2 Cl1                                                        |\n");
-  printf("--------------------                                                       |\n");
+  printf("                    |      |  Mesa0  |                      |  Mesa1  |       |\n");
+  printf("                    |                                                         |\n");
+  printf("--------------------                                                          |\n");
 
-    if (estadoMesa[2].comida == NULL && estadoMesa[3].comida == NULL) {
-      printf("\n");
+  if (fila->start==NULL){
+  printf("                                                                              |\n");
+  }
+  else if (fila->start!=NULL && fila->start->next==NULL){
+  printf("               %3ld                                                            |\n",*fila->start->senha);
+  }
+  else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next==NULL ){
+  printf("     %3ld      %3ld                                                             |\n",*fila->start->next->senha,*fila->start->senha);
+  }
+  else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next!=NULL 
+  && fila->start->next->next->next==NULL ){
+  printf("     %3ld %3ld %3ld                                                              |\n",*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
+  }
+  else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next!=NULL 
+  && fila->start->next->next->next!=NULL && fila->start->next->next->next->next==NULL){
+  printf("%3ld %3ld %3ld %3ld                                                              |\n",*fila->start->next->next->next->senha,*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
+  }
+
+  
+  printf("--------------------                                                          |\n");
+
+  if (estadoMesa[2].comida == NULL && estadoMesa[3].comida == NULL) {
+  printf("                    |                                                         |\n");
   } 
   else if (estadoMesa[2].comida != NULL && estadoMesa[3].comida == NULL) {
-      printf("                    |          %s                                        |\n", estadoMesa[2].comida);
+  printf("                    |         %-*s                                       |\n", largura,estadoMesa[2].comida);
+  }
+  else if (estadoMesa[2].comida == NULL && estadoMesa[3].comida != NULL) {
+  printf("                    |         %-*s                                       |\n", largura,estadoMesa[3].comida);
   } 
   else if (estadoMesa[2].comida != NULL && estadoMesa[3].comida != NULL) {
-      printf("                    |          %s                            %s            |\n", estadoMesa[2].comida, estadoMesa[3].comida);
+  printf("                    |         %-*s                       %-*s        |\n", largura,estadoMesa[2].comida, largura,estadoMesa[3].comida);
   }
   if (estadoMesa[2].idCliente == -1 && estadoMesa[3].idCliente == -1) {
-      printf("                    |      |\\`===='/|                    |\\`===='/|            |\n");
+  printf("                    |      |\\`====='/|                     |\\`====='/|        |\n");
   } 
   else if (estadoMesa[2].idCliente != -1 && estadoMesa[3].idCliente == -1) {
-      printf("                    |      Cl%ld|\\`===='/|                    |\\`===='/|            |\n", estadoMesa[2].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|                     |\\`====='/|        |\n", estadoMesa[2].idCliente);
   } 
   else if (estadoMesa[2].idCliente != -1 && estadoMesa[3].idCliente != -1) {
-      printf("                    |      Cl%ld|\\`===='/|                    Cl%ld|\\`===='/|            |\n", estadoMesa[2].idCliente,estadoMesa[3].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|               Cl %3ld|\\`====='/|        |\n", estadoMesa[2].idCliente,estadoMesa[3].idCliente);
   }
-  printf("                    |       |  Mesa3 |                   |  Mesa4 |        |\n");
-  printf("                    |                                                      |\n");
-  printf("                    |------------------------------------------------------|\n");
+  printf("                    |      |  Mesa2  |                     |  Mesa3  |        |\n");
+  printf("                    |                                                         |\n");
+  printf("                    |---------------------------------------------------------|\n");
   printf("\n");
 }
 
@@ -190,6 +225,7 @@ void* colocar_clientes_fila(void* args) {
         fila->last->next = novoCliente;
         fila->last = fila->last->next;
         printf("Cliente %ld colocado na fila\n", *fila->last->senha);
+        
         pthread_mutex_unlock(&mutexFila);
       }
       sem_post(&semFila);
