@@ -1,11 +1,13 @@
-# Projeto Multithread
+# Projeto Multithread - Restaurante
 
-## Conceitos chave 
+## Como rodar o projeto?
 
-**Mutex-lock**: mutex é uma abreviação para mutual exclusion. Essa é uma ferramenta utilizada em desenvolvimento que previne que duas threads que usam o mesmo recurso utilizem-no ao mesmo tempo. Isso é feito declarando uma variável de lock, que é setada para true antes que uma thread comece a manipular o recurso compartilhado. Desse modo, a outra thread entende que não pode alterá-lo se o lock estiver ativo. 
+- Primeiramente é necessário baixar a pasta "projetomultithread" em sua máquina;
 
-## Tema e Visualização
+- Após isso é só rodar os dois seguintes comandos em sequência no terminal:
 
+  make
 
-## Código 
+  ./prod_cons.out
 
+- Depois disso, os estados do restaurante vão começar a ser printados no terminal;
