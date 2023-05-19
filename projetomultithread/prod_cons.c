@@ -39,7 +39,7 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   largura,"",largura,"",largura,"",largura,"");
   } 
   else if (count == 1) {
-  printf("                    |   |%-*s|%-*s|%-*s|%-*s|  |Chef|      |\n",
+  printf("                    |   |%-*s|%-*s|%-*s|%-*s| |Chef|      |\n",
   largura,buffer[0],largura,"",largura,"",largura,"");
   } 
   else if (count == 2) {
@@ -86,18 +86,18 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   printf("                                                                              |\n");
   }
   else if (fila->start!=NULL && fila->start->next==NULL){
-  printf("               %3ld                                                            |\n",*fila->start->senha);
+  printf("               Cl%3ld                                                          |\n",*fila->start->senha);
   }
   else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next==NULL ){
-  printf("     %3ld      %3ld                                                             |\n",*fila->start->next->senha,*fila->start->senha);
+  printf("     Cl%3ld      Cl%3ld                                                         |\n",*fila->start->next->senha,*fila->start->senha);
   }
   else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next!=NULL 
   && fila->start->next->next->next==NULL ){
-  printf("     %3ld %3ld %3ld                                                              |\n",*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
+  printf("     Cl%3ld Cl%3ld Cl%3ld                                                        |\n",*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
   }
   else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next!=NULL 
   && fila->start->next->next->next!=NULL && fila->start->next->next->next->next==NULL){
-  printf("%3ld %3ld %3ld %3ld                                                              |\n",*fila->start->next->next->next->senha,*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
+  printf("Cl%3ld Cl%3ld Cl%3ld Cl%3ld                                                       |\n",*fila->start->next->next->next->senha,*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
   }
 
   
@@ -113,7 +113,7 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   printf("                    |         %-*s                                       |\n", largura,estadoMesa[3].comida);
   } 
   else if (estadoMesa[2].comida != NULL && estadoMesa[3].comida != NULL) {
-  printf("                    |         %-*s                       %-*s        |\n", largura,estadoMesa[2].comida, largura,estadoMesa[3].comida);
+  printf("                    |         %-*s                       %-*s       |\n", largura,estadoMesa[2].comida, largura,estadoMesa[3].comida);
   }
   if (estadoMesa[2].idCliente == -1 && estadoMesa[3].idCliente == -1) {
   printf("                    |      |\\`====='/|                     |\\`====='/|        |\n");
@@ -144,7 +144,7 @@ void* chef(void* args) {
 
         // Adicona comida no buffer
         pthread_mutex_lock(&mutexBuffer);
-        printf("Cozinheiro coloca %s no buffer\n", comida);
+        //printf("Cozinheiro coloca %s no buffer\n", comida);
         buffer[count] = comida;
         count++;
         pthread_mutex_unlock(&mutexBuffer);
@@ -173,15 +173,15 @@ void* mesa(void* args) {
       // }
       // printf("\n");
       print_estado_restaurante(argsMesa->fila, argsMesa->estado);
-      printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
+      //printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
       pthread_mutex_unlock(&mutexFila);
 
       // Remove uma comida do buffer
       sem_post(&semPedidosFeitos);
       sem_wait(&semPedidosProntos);
       pthread_mutex_lock(&mutexBuffer);
-      printf("buffer %ld\n", *clienteAtual.senha);
-      printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
+     // printf("buffer %ld\n", *clienteAtual.senha);
+     // printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
       comida = buffer[count - 1];
       argsMesa->estado[idMesa].comida = buffer[count - 1];
       count--;
@@ -217,14 +217,14 @@ void* colocar_clientes_fila(void* args) {
         pthread_mutex_lock(&mutexFila);
         fila->start = novoCliente;
         fila->last = novoCliente;
-        printf("Cliente %ld colocado na fila\n", *fila->start->senha);
+       // printf("Cliente %ld colocado na fila\n", *fila->start->senha);
         pthread_mutex_unlock(&mutexFila);
       }
       else {
         pthread_mutex_lock(&mutexFila);
         fila->last->next = novoCliente;
         fila->last = fila->last->next;
-        printf("Cliente %ld colocado na fila\n", *fila->last->senha);
+        //printf("Cliente %ld colocado na fila\n", *fila->last->senha);
         
         pthread_mutex_unlock(&mutexFila);
       }
