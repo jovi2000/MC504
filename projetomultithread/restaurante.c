@@ -292,6 +292,8 @@ int main(int argc, char* argv[]) {
     sem_destroy(&semPedidosProntos);
     sem_destroy(&semFila);
     pthread_mutex_destroy(&mutexBuffer);
+    pthread_mutex_destroy(&mutexFila);
+    pthread_mutex_destroy(&mutexPrint);
     free(fila);
     return 0;
 }
