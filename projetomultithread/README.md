@@ -24,9 +24,11 @@ O tema escolhido pelo grupo foi uma simulação do funcionamento de um **restaur
 
 - Após isso é só rodar os dois seguintes comandos em sequência no terminal:
 
-  make
+```c
+make
 
-  ./prod_cons.out
+./restaurante.out
+```
 
 - Depois disso, os estados do restaurante vão começar a ser printados no terminal;
 

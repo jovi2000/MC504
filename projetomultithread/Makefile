@@ -3,12 +3,12 @@ LDFLAGS = -lm
 
 .PHONY: all clean
 
-all: prod_cons
+all: restaurante
 
-prod_cons: prod_cons.c
-	gcc $(CFLAGS) -c prod_cons.c $(LDFLAGS)
-	gcc $(CFLAGS) -o prod_cons.out prod_cons.o $(LDFLAGS)
+restaurante: restaurante.c
+	gcc $(CFLAGS) -c restaurante.c $(LDFLAGS)
+	gcc $(CFLAGS) -o restaurante.out restaurante.o $(LDFLAGS)
 
 clean:
-	rm -f prod_cons
+	rm -f restaurante
 	rm -f *.o

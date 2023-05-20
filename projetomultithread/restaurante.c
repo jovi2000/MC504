@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <semaphore.h>
-#include "prod_cons.h" 
+#include "restaurante.h" 
 
 #define NUM_THREADS 6
 #define NUM_MESAS 4
-#define NUM_CHEFFS 1 
+#define NUM_CHEFFS 1
 
 sem_t semPedidosFeitos;
 sem_t semPedidosProntos;
@@ -20,14 +20,12 @@ pthread_mutex_t mutexFila;
 pthread_mutex_t mutexPrint;
 
 
-char* buffer[NUM_MESAS]; // buffer de comida com o mesmo tamanho do numero de mesas, já q n faz sentido ser maior. Talvez fazer o buffer ter o tamanho de NUM_CHEFFS
-int count = 0; // numero atual de comidas no buffer
+char* buffer[NUM_MESAS]; // Buffer de comida com o mesmo tamanho do numero de mesas, já q n faz sentido ser maior.
+int count = 0; // Nímero atual de comidas no buffer
 
 /***
  * Opções disponíveis no cardápio
- * Cada comida pode ter um tempo diferente de preparação e consumo, assim o restaurante fica bem "paralelizado"
  * */
-
 char *food[5] = {"Frango   ", "Carbonara", "Porpeta  ", "Mignon   ", "Camarão  "};
 
 
@@ -138,77 +136,67 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   printf("\n");
 }
 
-/**
- * Chef que produz uma comida
- * */ 
 void* chef(void* args) {
-    while (1) {
-        // Espera o cliente fazer o pedido
-        sem_wait(&semPedidosFeitos);
-    
-        // Cozinhando
-        char* comida = food[rand()%5];
-        sleep((rand()%1));
+  while (1) {
+    // Espera o cliente fazer o pedido
+    sem_wait(&semPedidosFeitos);
 
-        // Adicona comida no buffer
-        pthread_mutex_lock(&mutexBuffer);
-        //printf("Cozinheiro coloca %s no buffer\n", comida);
-        buffer[count] = comida;
-        count++;
-        pthread_mutex_unlock(&mutexBuffer);
-        sem_post(&semPedidosProntos);
-    }
+    // Cozinhando
+    char* comida = food[rand()%5];
+    sleep((rand()%1));
+
+    // Adicona comida no buffer
+    pthread_mutex_lock(&mutexBuffer);
+    buffer[count] = comida;
+    count++;
+    pthread_mutex_unlock(&mutexBuffer);
+    sem_post(&semPedidosProntos);
+  }
 }
 
-/** Mesa recebe um cliente e depois dele comer imprime o proprio ID. 
- * Talvez fazer esse ID ser uma "senha" que se obtem na fila, como se fosse uma senha pra obter a comida especifica.
- * */
+
 void* mesa(void* args) {
-    ArgsMesa *argsMesa = (ArgsMesa *) args;
-    while (1) {
-      char* comida;
-      long idMesa = argsMesa->id;
+  ArgsMesa *argsMesa = (ArgsMesa *) args;
+  while (1) {
+    char* comida;
+    long idMesa = argsMesa->id;
 
-      // Cliente pega seu lugar na mesa  
-      sem_wait(&semFila);
-      pthread_mutex_lock(&mutexFila);
-      Cliente clienteAtual = *argsMesa->fila->start;
-      p_no aux = argsMesa->fila->start;
-      argsMesa->fila->start = argsMesa->fila->start->next;
-      argsMesa->estado[idMesa].idCliente = *clienteAtual.senha;
-      pthread_mutex_lock(&mutexPrint);
-      print_estado_restaurante(argsMesa->fila, argsMesa->estado);
-      pthread_mutex_unlock(&mutexPrint);
-      //printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
-      pthread_mutex_unlock(&mutexFila);
+    // Cliente pega seu lugar na mesa  
+    sem_wait(&semFila);
+    pthread_mutex_lock(&mutexFila);
+    Cliente clienteAtual = *argsMesa->fila->start;
+    p_no aux = argsMesa->fila->start;
+    argsMesa->fila->start = argsMesa->fila->start->next;
+    argsMesa->estado[idMesa].idCliente = *clienteAtual.senha;
+    pthread_mutex_lock(&mutexPrint);
+    print_estado_restaurante(argsMesa->fila, argsMesa->estado);
+    pthread_mutex_unlock(&mutexPrint);
+    pthread_mutex_unlock(&mutexFila);
 
-      // Faz o pedido
-      sem_post(&semPedidosFeitos);
-      sem_wait(&semPedidosProntos);
-      // Remove uma comida do buffer
-      sleep((rand()%3)+1); // Isso impede que o cozinheiro fique travado no mutex do buffer, dessa forma ele consegue colocar mais comidas no buffer
-      pthread_mutex_lock(&mutexBuffer);
-     // printf("buffer %ld\n", *clienteAtual.senha);
-     // printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
-      sleep((rand()%4)+2); // Tempo do cliente ir até o buffer e pegar a comida
-      comida = buffer[count - 1];
-      argsMesa->estado[idMesa].comida = buffer[count - 1];
-      count--;
-      pthread_mutex_lock(&mutexPrint);
-      print_estado_restaurante(argsMesa->fila, argsMesa->estado);
-      pthread_mutex_unlock(&mutexPrint);
-      pthread_mutex_unlock(&mutexBuffer);
+    // Faz o pedido
+    sem_post(&semPedidosFeitos);
+    sem_wait(&semPedidosProntos);
+    // Remove uma comida do buffer
+    sleep((rand()%3)+1); // Isso impede que o cozinheiro fique travado no mutex do buffer, dessa forma ele consegue colocar mais comidas no buffer
+    pthread_mutex_lock(&mutexBuffer);
+    sleep((rand()%4)+2); // Tempo do cliente ir até o buffer e pegar a comida
+    comida = buffer[count - 1];
+    argsMesa->estado[idMesa].comida = buffer[count - 1];
+    count--;
+    pthread_mutex_lock(&mutexPrint);
+    print_estado_restaurante(argsMesa->fila, argsMesa->estado);
+    pthread_mutex_unlock(&mutexPrint);
+    pthread_mutex_unlock(&mutexBuffer);
 
-      // Consome a comida
-      sleep((rand()%8)+1);
-      //printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
-  
-      // Sai da mesa
-      argsMesa->estado[idMesa].idCliente = -1;
-      argsMesa->estado[idMesa].comida = NULL;
-      free(aux->senha);
-      free(aux);
-    }
+    // Cliente consome a comida
+    sleep((rand()%8)+1);
+
+    // Cliente sai da mesa
+    argsMesa->estado[idMesa].idCliente = -1;
+    argsMesa->estado[idMesa].comida = NULL;
+    free(aux->senha);
+    free(aux);
+  }
 }
 
 void* colocar_clientes_fila(void* args) {
@@ -229,14 +217,12 @@ void* colocar_clientes_fila(void* args) {
         pthread_mutex_lock(&mutexFila);
         fila->start = novoCliente;
         fila->last = novoCliente;
-       // printf("Cliente %ld colocado na fila\n", *fila->start->senha);
         pthread_mutex_unlock(&mutexFila);
       }
       else {
         pthread_mutex_lock(&mutexFila);
         fila->last->next = novoCliente;
         fila->last = fila->last->next;
-        //printf("Cliente %ld colocado na fila\n", *fila->last->senha);
         
         pthread_mutex_unlock(&mutexFila);
       }
@@ -247,7 +233,7 @@ void* colocar_clientes_fila(void* args) {
 
 int main(int argc, char* argv[]) {
     srand(time(NULL));
-    //quando for fazer a fila, precisa fazer algum sistema pra ver qual mesa(th[id]) tá disponivel pra passar como argumento de pthread_create
+    // Quando for fazer a fila, precisa fazer algum sistema pra ver qual mesa(th[id]) tá disponivel pra passar como argumento de pthread_create
     pthread_t th[NUM_THREADS]; 
     pthread_mutex_init(&mutexFila, NULL);
     pthread_mutex_init(&mutexBuffer, NULL);
