@@ -17,6 +17,8 @@ sem_t semFila;
 
 pthread_mutex_t mutexBuffer;
 pthread_mutex_t mutexFila;
+pthread_mutex_t mutexPrint;
+
 
 char* buffer[NUM_MESAS]; // buffer de comida com o mesmo tamanho do numero de mesas, já q n faz sentido ser maior. Talvez fazer o buffer ter o tamanho de NUM_CHEFFS
 int count = 0; // numero atual de comidas no buffer
@@ -26,7 +28,7 @@ int count = 0; // numero atual de comidas no buffer
  * Cada comida pode ter um tempo diferente de preparação e consumo, assim o restaurante fica bem "paralelizado"
  * */
 
-char *food[5] = {"Frango", "Carbonara", "Porpeta", "Mignon", "Camarão"};
+char *food[5] = {"Frango   ", "Carbonara", "Porpeta  ", "Mignon   ", "Camarão  "};
 
 
 void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
@@ -70,15 +72,18 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   printf("                    |         %-*s                        %-*s      |\n", largura,estadoMesa[0].comida, largura,estadoMesa[1].comida);
   }
   if (estadoMesa[0].idCliente == -1 && estadoMesa[1].idCliente == -1) {
-  printf("                    |      |\\`====='/|                      |\\`====='/|       |\n");
+  printf("                    |      |\\`====='/|                     |\\`====='/|        |\n");
   } 
   else if (estadoMesa[0].idCliente != -1 && estadoMesa[1].idCliente == -1) {
-  printf("                    | Cl%3ld|\\`====='/|                      |\\`====='/|       |\n", estadoMesa[0].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|                     |\\`====='/|        |\n", estadoMesa[0].idCliente);
+  }
+  else if (estadoMesa[0].idCliente == -1 && estadoMesa[1].idCliente != -1) {
+  printf("                    |      |\\`====='/|                Cl%3ld|\\`====='/|        |\n", estadoMesa[1].idCliente);
   } 
   else if (estadoMesa[0].idCliente != -1 && estadoMesa[1].idCliente != -1) {
-  printf("                    | Cl%3ld|\\`====='/|                 Cl%3ld|\\`====='/|       |\n", estadoMesa[0].idCliente,estadoMesa[1].idCliente);
+  printf("                    | Cl%3ld|\\`====='/|                Cl%3ld|\\`====='/|        |\n", estadoMesa[0].idCliente,estadoMesa[1].idCliente);
   }
-  printf("                    |      |  Mesa0  |                      |  Mesa1  |       |\n");
+  printf("                    |      |  Mesa0  |                     |  Mesa1  |        |\n");
   printf("                    |                                                         |\n");
   printf("--------------------                                                          |\n");
 
@@ -96,7 +101,7 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   printf("     Cl%3ld Cl%3ld Cl%3ld                                                        |\n",*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
   }
   else if (fila->start!=NULL && fila->start->next!=NULL && fila->start->next->next!=NULL 
-  && fila->start->next->next->next!=NULL && fila->start->next->next->next->next==NULL){
+  && fila->start->next->next->next!=NULL){
   printf("Cl%3ld Cl%3ld Cl%3ld Cl%3ld                                                       |\n",*fila->start->next->next->next->senha,*fila->start->next->next->senha,*fila->start->next->senha,*fila->start->senha);
   }
 
@@ -121,6 +126,9 @@ void print_estado_restaurante(Fila *fila, EstadoMesas *estadoMesa) {
   else if (estadoMesa[2].idCliente != -1 && estadoMesa[3].idCliente == -1) {
   printf("                    | Cl%3ld|\\`====='/|                     |\\`====='/|        |\n", estadoMesa[2].idCliente);
   } 
+  else if (estadoMesa[2].idCliente == -1 && estadoMesa[3].idCliente != -1) {
+  printf("                    |      |\\`====='/|                Cl%3ld|\\`====='/|        |\n", estadoMesa[3].idCliente);
+  }
   else if (estadoMesa[2].idCliente != -1 && estadoMesa[3].idCliente != -1) {
   printf("                    | Cl%3ld|\\`====='/|               Cl %3ld|\\`====='/|        |\n", estadoMesa[2].idCliente,estadoMesa[3].idCliente);
   }
@@ -140,7 +148,7 @@ void* chef(void* args) {
     
         // Cozinhando
         char* comida = food[rand()%5];
-        sleep((rand()%4)+2);
+        sleep((rand()%1));
 
         // Adicona comida no buffer
         pthread_mutex_lock(&mutexBuffer);
@@ -168,28 +176,32 @@ void* mesa(void* args) {
       p_no aux = argsMesa->fila->start;
       argsMesa->fila->start = argsMesa->fila->start->next;
       argsMesa->estado[idMesa].idCliente = *clienteAtual.senha;
-      //  for(int i = 0; i < 4; i++) {
-      //    printf("idCliente: %ld, comida: %s,", argsMesa->estado[i].idCliente, argsMesa->estado[i].comida);
-      // }
-      // printf("\n");
+      pthread_mutex_lock(&mutexPrint);
       print_estado_restaurante(argsMesa->fila, argsMesa->estado);
+      pthread_mutex_unlock(&mutexPrint);
       //printf("Cliente %ld senta na mesa %ld\n", *clienteAtual.senha, idMesa);
       pthread_mutex_unlock(&mutexFila);
 
-      // Remove uma comida do buffer
+      // Faz o pedido
       sem_post(&semPedidosFeitos);
       sem_wait(&semPedidosProntos);
+      // Remove uma comida do buffer
+      sleep((rand()%3)+1); // Isso impede que o cozinheiro fique travado no mutex do buffer, dessa forma ele consegue colocar mais comidas no buffer
       pthread_mutex_lock(&mutexBuffer);
      // printf("buffer %ld\n", *clienteAtual.senha);
      // printf("Cliente %ld começa a comer\n", *clienteAtual.senha);
+      sleep((rand()%4)+2); // Tempo do cliente ir até o buffer e pegar a comida
       comida = buffer[count - 1];
       argsMesa->estado[idMesa].comida = buffer[count - 1];
       count--;
+      pthread_mutex_lock(&mutexPrint);
+      print_estado_restaurante(argsMesa->fila, argsMesa->estado);
+      pthread_mutex_unlock(&mutexPrint);
       pthread_mutex_unlock(&mutexBuffer);
 
       // Consome a comida
       sleep((rand()%8)+1);
-      printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
+      //printf("Cliente %ld da mesa %ld terminou de comer %s\n", *clienteAtual.senha, idMesa ,comida);
   
       // Sai da mesa
       argsMesa->estado[idMesa].idCliente = -1;
@@ -239,6 +251,7 @@ int main(int argc, char* argv[]) {
     pthread_t th[NUM_THREADS]; 
     pthread_mutex_init(&mutexFila, NULL);
     pthread_mutex_init(&mutexBuffer, NULL);
+    pthread_mutex_init(&mutexPrint, NULL);
     sem_init(&semPedidosFeitos, 0, 0);
     sem_init(&semPedidosProntos, 0, 0);
     sem_init(&semFila, 0, 0);
